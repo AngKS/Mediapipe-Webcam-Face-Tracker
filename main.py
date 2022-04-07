@@ -145,7 +145,6 @@ class Frame:
         upres = sr.upsample(upres) # upsample image
         upres = cv2.resize(upres, (1280, 720))
 
-        cv2.imshow("Before", self.img)
         cv2.imshow("Face-Tracking", upres)
 
 
