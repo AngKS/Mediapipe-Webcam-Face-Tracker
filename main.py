@@ -105,11 +105,12 @@ class Frame:
 
         # Crop image to match distance values
         newX = int(boxX - distX)
+        # This is a debugging tool that prints the values of the new bounding box.
         newY = int(boxY - distY)
         newW = int(2 * distX + boxW)
         newH = int(2 * distY + boxH)
 
-        print(newX, newY, newW, newH)
+        # print(newX, newY, newW, newH)
         # if the new box is out of bounds, don't crop
         if not (newX < 0 or newY < 0 or newW > screenWidth or newH > screenHeight):
             self.crop([newX, newY, newW, newH])
@@ -138,8 +139,14 @@ class Frame:
     def show(self):
         if self.boxIsVisible:
             self.drawBox()
+        
+        # reduce the size of the image by a factor of 2 for upsamling
+        upres = cv2.resize(self.img, (0, 0), fx=0.3, fy=0.3)
+        upres = sr.upsample(upres) # upsample image
+        upres = cv2.resize(upres, (1280, 720))
 
-        cv2.imshow("Face-Tracking", self.img)
+        cv2.imshow("Before", self.img)
+        cv2.imshow("Face-Tracking", upres)
 
 
 mp_face_detection = mp.solutions.face_detection
@@ -151,10 +158,22 @@ SCALE_FACTOR = 1.17     # Medium = 1.2,     Close = 1.14
 MIN_NEIGHBORS = 8       # 8
 MINSIZE = (60, 60)    # Medium = (60, 60),    Close = (120, 120)
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 # Create global detection box for steady screen transformation
 box = BoundingBox(-1, -1, -1, -1)
+
+'''
+Experimental Function - Super Resolution using FSRCNN
+'''
+
+sr = cv2.dnn_superres.DnnSuperResImpl_create()
+path = "./models/FSRCNN_model.pb"
+
+sr.readModel(path)
+sr.setModel("fsrcnn", 3)
+
+
 
 with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.66) as face_detection:
     prev_results = []
